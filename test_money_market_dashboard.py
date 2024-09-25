@@ -413,7 +413,13 @@ line_fig_money_market.add_trace(go.Scatter(x=sliced_data_money_market.index, y=s
 line_fig_money_market.add_trace(go.Scatter(x=sliced_data_money_market.index, y=moving_average_money_market, mode='lines', name=f"{selected_column_money_market} 1-year MA"))
 
 # Update the layout of the chart for money markets
-line_fig_money_market.update_layout(template="plotly_dark", title=f"{selected_column_money_market}", xaxis_title="Date", yaxis_title=selected_column_money_market)
+line_fig_money_market.update_layout(
+    template="plotly_dark", 
+    title=f"{selected_column_money_market}", 
+    xaxis_title="Date", 
+    yaxis_title=selected_column_money_market,
+    showlegend=False  # Disable the legend
+)
 
 # Display the plot for money markets
 col1.plotly_chart(line_fig_money_market)
