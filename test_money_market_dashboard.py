@@ -303,14 +303,18 @@ df['1Y StdDev'] = t_yields.iloc[-53:].std()  # Standard deviation of the last 25
 df['1Y Z-Score'] = (df['Current Yield'] - df['1Y Mean']) / df['1Y StdDev']
 
 # Calculating the 3-year mean and standard deviation for each yield
-df['3Y Mean'] = t_yields.iloc[-159:].mean()  # Mean of the last 756 rows (3 years)
-df['3Y StdDev'] = t_yields.iloc[-159:].std()  # Standard deviation of the last 756 rows (3 years)
+df['3Y Mean'] = t_yields.iloc[-159:].mean()  
+df['3Y StdDev'] = t_yields.iloc[-159:].std() 
 
-# Calculating the Z-Score for 3 years
+df['5Y Mean'] = t_yields.iloc[-795:].mean()
+df['5Y StdDev'] = t_yields.iloc[-795:].std()
+
 df['3Y Z-Score'] = (df['Current Yield'] - df['3Y Mean']) / df['3Y StdDev']
 
+df['5Y Z-Score'] = (df['Current Yield'] - df['5Y Mean']) / df['5Y StdDev']
+
 # Dropping the intermediate mean and std columns if not needed
-df = df.drop(columns=['1Y Mean', '1Y StdDev', '3Y Mean', '3Y StdDev'])
+df = df.drop(columns=['1Y Mean', '1Y StdDev', '3Y Mean', '3Y StdDev', '5Y Mean', '5Y StdDev'])
 
 df = df.style.format({
     'Current Yield' : "{:.2f}",
@@ -319,7 +323,8 @@ df = df.style.format({
     'MoM bps' : "{:.2f}",
     'YoY bps' : "{:.2f}",
     '1Y Z-Score': "{:.2f}",
-    '3Y Z-Score': "{:.2f}"
+    '3Y Z-Score': "{:.2f}",
+    '5Y Z-Score': "{:.2f}"
 })
 
 
