@@ -262,6 +262,7 @@ fixed_income_dict = {
     'IEF': '7-10 Year Treasury Bond ETF',
     'LQD': 'Investment Grade Corporate Bond ETF',
     'HYG': 'High Yield Corporate Bond ETF',
+    'JNK': 'Junk Bonds ETF',
     'SHY': '1-3 Year Treasury Bond ETF',
     '^MOVE' : 'ICE BofAML MOVE Index '
     }
