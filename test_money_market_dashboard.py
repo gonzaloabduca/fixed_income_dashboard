@@ -263,6 +263,7 @@ fixed_income_dict = {
     'LQD': 'Investment Grade Corporate Bond ETF',
     'HYG': 'High Yield Corporate Bond ETF',
     'SHY': '1-3 Year Treasury Bond ETF',
+    '^MOVE' : 'ICE BofAML MOVE Index '
     }
 
 money_markets = get_indicators(bonds, start=start, end=end).resample('W').last().ffill()
