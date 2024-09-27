@@ -284,8 +284,9 @@ col3, col4 = st.columns([1, 1])
 
 t_yields = money_markets[['Fed Funds Rate', '3 month T-yield','2 year T-yield',
                          '5 year T-yield','10 year T-yield', '30 year T-yield', 
-                         '10y-2y Spread','AAA-BBB Corp Yield','CCC Corp Yield',
-                         '5yr Implied Inflation']]
+                         '10y-2y Spread','AAA-BBB Corp Yield','10yr-BBB Corp Yield',
+                          'CCC Corp Yield','5yr Implied Inflation']]
+
 df = pd.DataFrame()
 
 df['Current Yield'] = t_yields.iloc[-1]  # This takes the last row of each column as the current yield
