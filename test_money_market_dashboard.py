@@ -335,7 +335,7 @@ money_market_dashboard = df
 
 fixed_income_data = yf.download(tickers=list(fixed_income_dict.keys()), start=start, end=end)['Adj Close']
 
-fixed_income_data['Investment Grade Bonds / Junk Bonds'] = fixed_income_data['LQD'] / fixed_income_data['JNK']
+fixed_income_data['LQD/JNK'] = fixed_income_data['LQD'] / fixed_income_data['JNK']
 
 # Bottom-left: Fixed Income Dashboard
 fixed_income_dashboard = generate_sector_board(fixed_income_dict, start=start_date, end=end_date)
