@@ -68,66 +68,38 @@ fredpy.set_token(API_KEY)
 
 @st.cache_data
 def get_indicators(df, start, end):
-    
     # Initialize an empty DataFrame to store all indicators
     macro_indicators = pd.DataFrame()
 
-    # Loop through each indicator, fetch the data, and merge it into the main DataFrame
     for name, series_id in df.items():
-        print(f"Fetching data for {name} ({series_id})")
-        
-        # Fetch the series data using the get_series method
         try:
-            series_data = fredpy.get_series(
-                seriesID=series_id,
-                start=start,
-                end=end
-            )
-            
-            # Rename the 'value' column to the name of the series (key)
+            series_data = fredpy.get_series(seriesID=series_id, start=start, end=end)
             series_data = series_data.rename(columns={series_id: name})
             
-            # Merge the series data with the macro_indicators DataFrame
             if macro_indicators.empty:
                 macro_indicators = series_data.set_index('date')
             else:
                 macro_indicators = macro_indicators.merge(series_data.set_index('date'), on='date', how='outer')
-
         except Exception as e:
             print(f"Failed to fetch data for {name} ({series_id}): {e}")
 
-    # Display the first few rows of the final DataFrame
     return macro_indicators
 
 @st.cache_data
+def load_yfinance_data(tickers, start, end):
+    return yf.download(tickers=list(tickers.keys()), start=start, end=end)['Adj Close']
+
+@st.cache
 def generate_sector_board(sectors_dict, start, end):
-    """
-    This function generates a sector performance board for given sectors over specific time periods.
-
-    Parameters:
-    - sectors_dict: Dictionary where keys are sector tickers and values are sector names.
-    - start: Start date for downloading the data.
-    - end: End date for downloading the data.
-
-    Returns:
-    - A styled DataFrame with sector performance metrics and percentile ranks.
-    """
-    # Download adjusted close prices for the given tickers in sectors_dict
     sectors_data = yf.download(tickers=list(sectors_dict.keys()), start=start, end=end)['Adj Close']
 
-    # Initialize an empty DataFrame for the board
     sector_board = pd.DataFrame()
-
-    # Add the 'Current Price' column
     sector_board['Current Price'] = sectors_data.iloc[-1]
-
-    # Calculate performance metrics
     current_performance = sectors_data.pct_change(periods=252).iloc[-1]
-    mean_1y_perf = sectors_data.pct_change(periods=252).mean()  # Mean of the 1-year performance
-    std_1y_perf = sectors_data.pct_change(periods=252).std()    # Standard deviation of the 1-year performance
+    mean_1y_perf = sectors_data.pct_change(periods=252).mean()
+    std_1y_perf = sectors_data.pct_change(periods=252).std()
     z_score = (current_performance - mean_1y_perf) / std_1y_perf
 
-    # Add performance columns for different periods (1 week, 1 month, 3 months, 1 year)
     sector_board = pd.concat([sector_board,
                               sectors_data.pct_change(periods=6).iloc[-1].rename('1 week Perf'),
                               sectors_data.pct_change(periods=21).iloc[-1].rename('1 month Perf'),
@@ -136,96 +108,10 @@ def generate_sector_board(sectors_dict, start, end):
                               z_score.rename('Z-Score')],
                              axis=1)
 
-    # Create the 'Asset' column by mapping sector names from sectors_dict
     sector_board['Asset'] = sector_board.index.map(sectors_dict)
-
-    # Reorder columns to have 'Asset' as the first column
-    sector_board = sector_board[['Asset', 'Current Price', '1 week Perf', '1 month Perf', '3 month Perf', '1 year Perf',
-                                'Z-Score']]
-
-    # Format the DataFrame for better readability
-    sector_board = sector_board.style.format({
-        'Current Price': "{:.2f}",
-        '1 week Perf': "{:.2%}",
-        '1 month Perf': "{:.2%}",
-        '3 month Perf': "{:.2%}",
-        '1 year Perf': "{:.2%}",
-        'Z-Score': "{:.2f}"
-    })
+    sector_board = sector_board[['Asset', 'Current Price', '1 week Perf', '1 month Perf', '3 month Perf', '1 year Perf', 'Z-Score']]
 
     return sector_board
-
-@st.cache_data
-def load_yfinance_data(tickers, start, end):
-    return yf.download(tickers=list(tickers.keys()), start=start, end=end)['Adj Close']
-
-@st.cache_data
-def generate_macro_board(macro_dict, start, end):
-    """
-    This function generates a macro performance board for given macro indicators over specific time periods.
-
-    Parameters:
-    - macro_dict: Dictionary where keys are macro indicator names and values are their FRED API codes.
-    - start: Start date for downloading the data.
-    - end: End date for downloading the data.
-
-    Returns:
-    - A styled DataFrame with macro performance metrics and percentile rank for 1-year performance.
-    """
-    # Download the macro indicator data
-    macro_data = get_indicators(macro_dict, start=start, end=end)
-
-    # Ensure the index is DatetimeIndex before resampling
-    if not isinstance(macro_data.index, pd.DatetimeIndex):
-        macro_data.index = pd.to_datetime(macro_data.index)
-
-    # Resample monthly and forward-fill missing values
-    macro_data = macro_data.resample('M').last().ffill()
-
-    # Initialize an empty DataFrame for the board
-    macro_board = pd.DataFrame()
-
-    # Add the 'Current Value' column
-    macro_board['Current Value'] = macro_data.iloc[-1]
-
-    # Calculate performance metrics for different periods
-    current_performance = macro_data.pct_change(periods=12).iloc[-1]  # 1-year performance
-    mean_1y_perf = macro_data.pct_change(periods=12).mean()  # Mean of the 1-year performance
-    std_1y_perf = macro_data.pct_change(periods=12).std()    # Standard deviation of the 1-year performance
-    z_score = (current_performance - mean_1y_perf) / std_1y_perf
-
-    # Add performance columns for different periods (1 month, 3 months, 1 year)
-    macro_board = pd.concat([macro_board,
-                             macro_data.pct_change(periods=1).iloc[-1].rename('1 month Perf'),
-                             macro_data.pct_change(periods=3).iloc[-1].rename('3 month Perf'),
-                             macro_data.pct_change(periods=12).iloc[-1].rename('1 year Perf'),
-                             z_score.rename('Z-Score')],
-                            axis=1)
-    
-    # 3-month rate of change (3m ROC of 1 year performance)
-    macro_board['3m 1y Perf ROC'] = macro_board['1 year Perf'] - macro_board['1 year Perf'].shift(3)
-    
-    # Handle NaN values caused by shifting (e.g., the first few rows might be NaN)
-    macro_board['3m 1y Perf ROC'] = macro_board['3m 1y Perf ROC'].fillna(0)  # Or use another method
-
-    # Calculate the percentile rank for 1-year performance
-    macro_board['1 year Perf Percentile Rank'] = macro_board['1 year Perf'].rank(pct=True)
-
-    # Reorder columns
-    macro_board = macro_board[['Current Value', '1 month Perf', '3 month Perf', '1 year Perf', 'Z-Score']]
-
-    # Format the DataFrame for better readability
-    macro_board = macro_board.style.format({
-        'Current Value': "{:.2f}",
-        '1 month Perf': "{:.2%}",
-        '3 month Perf': "{:.2%}",
-        '1 year Perf': "{:.2%}",
-        'Z-Score': "{:.2f}"
-    })
-
-    # Return the styled DataFrame
-    return macro_board
-
 
 bonds = {
     '10y-2y Spread': 'T10Y2Y',
