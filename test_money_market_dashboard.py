@@ -66,6 +66,7 @@ class FredPy:
 fredpy = FredPy()
 fredpy.set_token(API_KEY)
 
+@st.cache_data
 def get_indicators(df, start, end):
     
     # Initialize an empty DataFrame to store all indicators
@@ -98,7 +99,7 @@ def get_indicators(df, start, end):
     # Display the first few rows of the final DataFrame
     return macro_indicators
 
-
+@st.cache_data
 def generate_sector_board(sectors_dict, start, end):
     """
     This function generates a sector performance board for given sectors over specific time periods.
@@ -154,6 +155,11 @@ def generate_sector_board(sectors_dict, start, end):
 
     return sector_board
 
+@st.cache_data
+def load_yfinance_data(tickers, start, end):
+    return yf.download(tickers=list(tickers.keys()), start=start, end=end)['Adj Close']
+
+@st.cache_data
 def generate_macro_board(macro_dict, start, end):
     """
     This function generates a macro performance board for given macro indicators over specific time periods.
@@ -333,7 +339,8 @@ df = df.style.format({
 
 money_market_dashboard = df
 
-fixed_income_data = yf.download(tickers=list(fixed_income_dict.keys()), start=start, end=end)['Adj Close']
+
+fixed_income_data = load_yfinance_data(tickers=list(fixed_income_dict.keys()), start=start, end=end)['Adj Close']
 
 fixed_income_data['LQD/JNK'] = fixed_income_data['LQD'] / fixed_income_data['JNK']
 
