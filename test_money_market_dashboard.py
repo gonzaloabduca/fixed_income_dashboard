@@ -66,40 +66,35 @@ class FredPy:
 fredpy = FredPy()
 fredpy.set_token(API_KEY)
 
+# Cache data fetching functions
 @st.cache_data
 def get_indicators(df, start, end):
-    # Initialize an empty DataFrame to store all indicators
     macro_indicators = pd.DataFrame()
-
     for name, series_id in df.items():
         try:
             series_data = fredpy.get_series(seriesID=series_id, start=start, end=end)
             series_data = series_data.rename(columns={series_id: name})
-            
             if macro_indicators.empty:
                 macro_indicators = series_data.set_index('date')
             else:
                 macro_indicators = macro_indicators.merge(series_data.set_index('date'), on='date', how='outer')
         except Exception as e:
             print(f"Failed to fetch data for {name} ({series_id}): {e}")
-
     return macro_indicators
 
 @st.cache_data
 def load_yfinance_data(tickers, start, end):
     return yf.download(tickers=list(tickers.keys()), start=start, end=end)['Adj Close']
 
-@st.cache
+@st.cache_data
 def generate_sector_board(sectors_dict, start, end):
     sectors_data = yf.download(tickers=list(sectors_dict.keys()), start=start, end=end)['Adj Close']
-
     sector_board = pd.DataFrame()
     sector_board['Current Price'] = sectors_data.iloc[-1]
     current_performance = sectors_data.pct_change(periods=252).iloc[-1]
     mean_1y_perf = sectors_data.pct_change(periods=252).mean()
     std_1y_perf = sectors_data.pct_change(periods=252).std()
     z_score = (current_performance - mean_1y_perf) / std_1y_perf
-
     sector_board = pd.concat([sector_board,
                               sectors_data.pct_change(periods=6).iloc[-1].rename('1 week Perf'),
                               sectors_data.pct_change(periods=21).iloc[-1].rename('1 month Perf'),
@@ -107,11 +102,9 @@ def generate_sector_board(sectors_dict, start, end):
                               sectors_data.pct_change(periods=252).iloc[-1].rename('1 year Perf'),
                               z_score.rename('Z-Score')],
                              axis=1)
-
     sector_board['Asset'] = sector_board.index.map(sectors_dict)
-    sector_board = sector_board[['Asset', 'Current Price', '1 week Perf', '1 month Perf', '3 month Perf', '1 year Perf', 'Z-Score']]
+    return sector_board[['Asset', 'Current Price', '1 week Perf', '1 month Perf', '3 month Perf', '1 year Perf', 'Z-Score']]
 
-    return sector_board
 
 bonds = {
     '10y-2y Spread': 'T10Y2Y',
@@ -161,15 +154,15 @@ fixed_income_dict = {
 
 money_markets = get_indicators(bonds, start=start, end=end).resample('W').last().ffill()
 
-# Adding custom bond spreads and inflation expectations
-money_markets['AAA-BBB Corp Yield'] = (money_markets['AAA Corp Yield'] - money_markets['BBB Corp Yield']) * -1
-money_markets['AAA-BBB Corp Yield'] =  (money_markets['AAA Corp Yield'] - money_markets['BBB Corp Yield']) *-1
-money_markets['AAA-CCC Corp Yield'] =  (money_markets['AAA Corp Yield'] - money_markets['CCC Corp Yield']) *-1
-money_markets['BBB-CCC Corp Yield'] =  (money_markets['BBB Corp Yield'] - money_markets['CCC Corp Yield']) *-1
-money_markets['10yr-AAA Corp Yield'] =  (money_markets['10 year T-yield'] - money_markets['AAA Corp Yield']) *-1
-money_markets['10yr-BBB Corp Yield'] =  (money_markets['10 year T-yield'] - money_markets['BBB Corp Yield']) *-1
-money_markets['10yr-CCC Corp Yield'] =  (money_markets['10 year T-yield'] - money_markets['CCC Corp Yield']) *-1
-money_markets['5yr Implied Inflation'] =  money_markets['5 year T-yield'] - money_markets['5 year TIPS']
+@st.cache_data
+def process_money_market_data(money_markets):
+    # Adding custom bond spreads and inflation expectations
+    money_markets['AAA-CCC Corp Yield'] =  (money_markets['AAA Corp Yield'] - money_markets['CCC Corp Yield']) *-1
+    money_markets['10yr-BBB Corp Yield'] =  (money_markets['10 year T-yield'] - money_markets['BBB Corp Yield']) *-1
+    money_markets['5yr Implied Inflation'] =  money_markets['5 year T-yield'] - money_markets['5 year TIPS']
+    return money_markets
+    
+money_markets = process_money_market_data(money_markets)
 
 
 # Define the layout with 4 columns
