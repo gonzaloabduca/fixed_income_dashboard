@@ -235,28 +235,6 @@ col2.subheader("Inflation Dashboard")
 col2.table(inflation_dashboard)
 
 #########################################
-# Top-right: Interactive Line Chart with Dropdown Menu
-col2.subheader("Interactive Fixed Income Line Chart")
-
-# Dropdown to select a column for fixed income data
-selected_column_fixed_income = col2.selectbox("Select a fixed income column to plot", fixed_income_data.columns)
-
-# Dropdown menu for time range selection for fixed income
-time_range_fixed_income = col2.selectbox("Select a time range for fixed income", ('1Y', '5Y', '20Y', 'MAX'), index=1)  # Default is 5Y
-
-# Filter the data based on the selected time range for fixed income
-if time_range_fixed_income == '1Y':
-    sliced_data_fixed_income = fixed_income_data.iloc[-252:]  # Last 52 weeks for 1 year
-elif time_range_fixed_income == '5Y':
-    sliced_data_fixed_income = fixed_income_data.iloc[-1260:]  # Last 260 weeks for 5 years
-elif time_range_fixed_income == '20Y':
-    sliced_data_fixed_income = fixed_income_data.iloc[-5040:]  # Last 1040 weeks for 20 years
-else:  # 'MAX'
-    sliced_data_fixed_income = fixed_income_data  # No slicing, show all data
-
-# Calculate the 1-year moving average for the selected column for fixed income
-moving_average_fixed_income = sliced_data_fixed_income[selected_column_fixed_income].rolling(window=252).mean()
-
 # Create the Plotly figure for fixed income
 line_fig_fixed_income = go.Figure()
 
@@ -267,11 +245,27 @@ line_fig_fixed_income.add_trace(go.Scatter(x=sliced_data_fixed_income.index, y=s
 line_fig_fixed_income.add_trace(go.Scatter(x=sliced_data_fixed_income.index, y=moving_average_fixed_income, mode='lines', name=f"{selected_column_fixed_income} 1-year MA"))
 
 # Update the layout of the chart for fixed income
-line_fig_fixed_income.update_layout(template="plotly_dark", title=f"{selected_column_fixed_income}", xaxis_title="Date", yaxis_title=selected_column_fixed_income)
+line_fig_fixed_income.update_layout(
+    template="plotly_dark", 
+    title=f"{selected_column_fixed_income}", 
+    xaxis_title="Date", 
+    yaxis_title=selected_column_fixed_income,
+    xaxis=dict(
+        rangeslider=dict(visible=True),  # Add a range slider below the chart
+        rangeselector=dict(              # Add buttons for selecting time ranges
+            buttons=list([
+                dict(count=1, label="1Y", step="year", stepmode="backward"),
+                dict(count=5, label="5Y", step="year", stepmode="backward"),
+                dict(count=10, label="10Y", step="year", stepmode="backward"),
+                dict(count=20, label="20Y", step="year", stepmode="backward"),
+                dict(step="all", label="MAX")  # Option to see the full range
+            ])
+        )
+    )
+)
 
 # Display the plot for fixed income
 col2.plotly_chart(line_fig_fixed_income)
-
 
 #########################################
 # Top-left: Interactive Line Chart with Dropdown Menu
