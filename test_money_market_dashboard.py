@@ -268,28 +268,6 @@ line_fig_fixed_income.update_layout(
 col2.plotly_chart(line_fig_fixed_income)
 
 #########################################
-# Top-left: Interactive Line Chart with Dropdown Menu
-col1.subheader("Interactive Money Market Line Chart")
-
-# Dropdown to select a column for money markets
-selected_column_money_market = col1.selectbox("Select a money market column to plot", money_markets.columns)
-
-# Dropdown menu for time range selection for money markets
-time_range_money_market = col1.selectbox("Select a time range for money markets", ('1Y', '5Y', '20Y', 'MAX'), index=1)  # Default is 5Y
-
-# Filter the data based on the selected time range for money markets
-if time_range_money_market == '1Y':
-    sliced_data_money_market = money_markets.iloc[-52:]  # Last 52 weeks for 1 year
-elif time_range_money_market == '5Y':
-    sliced_data_money_market = money_markets.iloc[-260:]  # Last 260 weeks for 5 years
-elif time_range_money_market == '20Y':
-    sliced_data_money_market = money_markets.iloc[-1040:]  # Last 1040 weeks for 20 years
-else:  # 'MAX'
-    sliced_data_money_market = money_markets  # No slicing, show all data
-
-# Calculate the 1-year moving average for the selected column for money markets
-moving_average_money_market = sliced_data_money_market[selected_column_money_market].rolling(window=52).mean()
-
 # Create the Plotly figure for money markets
 line_fig_money_market = go.Figure()
 
@@ -305,7 +283,18 @@ line_fig_money_market.update_layout(
     title=f"{selected_column_money_market}", 
     xaxis_title="Date", 
     yaxis_title=selected_column_money_market,
-    showlegend=False  # Disable the legend
+    xaxis=dict(
+        rangeslider=dict(visible=True),  # Add a range slider below the chart
+        rangeselector=dict(              # Add buttons for selecting time ranges
+            buttons=list([
+                dict(count=1, label="1Y", step="year", stepmode="backward"),
+                dict(count=5, label="5Y", step="year", stepmode="backward"),
+                dict(count=10, label="10Y", step="year", stepmode="backward"),
+                dict(count=20, label="20Y", step="year", stepmode="backward"),
+                dict(step="all", label="MAX")  # Option to see the full range
+            ])
+        )
+    )
 )
 
 # Display the plot for money markets
