@@ -152,10 +152,10 @@ fixed_income_dict = {
     '^MOVE' : 'ICE BofAML MOVE Index '
     }
 
-money_markets = get_indicators(bonds, start=start, end=end).resample('W').last().ffill()
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def process_money_market_data(money_markets):
+    money_markets = get_indicators(bonds, start=start, end=end).resample('W').last().ffill()
     # Adding custom bond spreads and inflation expectations
     money_markets['AAA-CCC Corp Yield'] =  (money_markets['AAA Corp Yield'] - money_markets['CCC Corp Yield']) *-1
     money_markets['10yr-BBB Corp Yield'] =  (money_markets['10 year T-yield'] - money_markets['BBB Corp Yield']) *-1
@@ -219,9 +219,12 @@ df = df.style.format({
 money_market_dashboard = df
 
 
-fixed_income_data = load_yfinance_data(tickers=list(fixed_income_dict.keys()), start=start, end=end)['Adj Close']
-
-fixed_income_data['LQD/JNK'] = fixed_income_data['LQD'] / fixed_income_data['JNK']
+@st.cache_data(show_spinner=False)
+def get_fixed_income_data(tickers, start, end):
+    fixed_income_data = yf.download(tickers=list(tickers.keys()), start=start, end=end)['Adj Close']
+    fixed_income_data['LQD/JNK'] = fixed_income_data['LQD'] / fixed_income_data['JNK']
+    
+    return fixed_income_data
 
 # Bottom-left: Fixed Income Dashboard
 fixed_income_dashboard = generate_sector_board(fixed_income_dict, start=start_date, end=end_date)
