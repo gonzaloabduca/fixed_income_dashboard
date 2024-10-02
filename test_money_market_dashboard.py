@@ -261,6 +261,7 @@ fixed_income_dict = {
     'MBB': 'Mortgage-Backed Securities ETF',
     'IEF': '7-10 Year Treasury Bond ETF',
     'LQD': 'Investment Grade Corporate Bond ETF',
+    'JNK': 'Junk Bonds ETF',
     'HYG': 'High Yield Corporate Bond ETF',
     'SHY': '1-3 Year Treasury Bond ETF',
     }
@@ -268,11 +269,7 @@ fixed_income_dict = {
 money_markets = get_indicators(bonds, start=start, end=end).resample('W').last().ffill()
 
 # Adding custom bond spreads and inflation expectations
-money_markets['AAA-BBB Corp Yield'] = (money_markets['AAA Corp Yield'] - money_markets['BBB Corp Yield']) * -1
-money_markets['AAA-BBB Corp Yield'] =  (money_markets['AAA Corp Yield'] - money_markets['BBB Corp Yield']) *-1
 money_markets['AAA-CCC Corp Yield'] =  (money_markets['AAA Corp Yield'] - money_markets['CCC Corp Yield']) *-1
-money_markets['BBB-CCC Corp Yield'] =  (money_markets['BBB Corp Yield'] - money_markets['CCC Corp Yield']) *-1
-money_markets['10yr-AAA Corp Yield'] =  (money_markets['10 year T-yield'] - money_markets['AAA Corp Yield']) *-1
 money_markets['10yr-BBB Corp Yield'] =  (money_markets['10 year T-yield'] - money_markets['BBB Corp Yield']) *-1
 money_markets['10yr-CCC Corp Yield'] =  (money_markets['10 year T-yield'] - money_markets['CCC Corp Yield']) *-1
 money_markets['5yr Implied Inflation'] =  money_markets['5 year T-yield'] - money_markets['5 year TIPS']
@@ -382,37 +379,48 @@ col1.subheader("Interactive Money Market Line Chart")
 # Dropdown to select a column for money markets
 selected_column_money_market = col1.selectbox("Select a money market column to plot", money_markets.columns)
 
-# Dropdown menu for time range selection for money markets
-time_range_money_market = col1.selectbox("Select a time range for money markets", ('1Y', '5Y', '20Y', 'MAX'), index=1)  # Default is 5Y
-
-# Filter the data based on the selected time range for money markets
-if time_range_money_market == '1Y':
-    sliced_data_money_market = money_markets.iloc[-52:]  # Last 52 weeks for 1 year
-elif time_range_money_market == '5Y':
-    sliced_data_money_market = money_markets.iloc[-260:]  # Last 260 weeks for 5 years
-elif time_range_money_market == '20Y':
-    sliced_data_money_market = money_markets.iloc[-1040:]  # Last 1040 weeks for 20 years
-else:  # 'MAX'
-    sliced_data_money_market = money_markets  # No slicing, show all data
-
 # Calculate the 1-year moving average for the selected column for money markets
-moving_average_money_market = sliced_data_money_market[selected_column_money_market].rolling(window=52).mean()
+moving_average_money_market = money_markets[selected_column_money_market].rolling(window=52).mean()
 
 # Create the Plotly figure for money markets
 line_fig_money_market = go.Figure()
 
 # Add the selected money market column's line chart
-line_fig_money_market.add_trace(go.Scatter(x=sliced_data_money_market.index, y=sliced_data_money_market[selected_column_money_market], mode='lines', name=selected_column_money_market))
+line_fig_money_market.add_trace(go.Scatter(x=money_markets.index, y=money_markets[selected_column_money_market], 
+                                           mode='lines', name=selected_column_money_market))
 
 # Add the 1-year moving average line chart for money markets
-line_fig_money_market.add_trace(go.Scatter(x=sliced_data_money_market.index, y=moving_average_money_market, mode='lines', name=f"{selected_column_money_market} 1-year MA"))
+line_fig_money_market.add_trace(go.Scatter(x=money_markets.index, y=moving_average_money_market, 
+                                           mode='lines', name=f"{selected_column_money_market} 1-year MA"))
 
 # Update the layout of the chart for money markets
-line_fig_money_market.update_layout(template="plotly_dark", title=f"{selected_column_money_market}", xaxis_title="Date", yaxis_title=selected_column_money_market)
+line_fig_money_market.update_layout(
+    template="plotly_dark", 
+    title=f"{selected_column_money_market}",
+    xaxis_title="Date", 
+    yaxis_title=selected_column_money_market,
+    showlegend = false
+)
+    
+    
+    # Add range selector and slider
+    xaxis=dict(
+        rangeselector=dict(
+            buttons=list([
+                dict(count=1, label="1Y", step="year", stepmode="backward"),
+                dict(count=5, label="5Y", step="year", stepmode="backward"),
+                dict(count=10, label="10Y", step="year", stepmode="backward"),
+                dict(count=25, label="25Y", step="year", stepmode="backward"),
+                dict(step="all", label="MAX")
+            ])
+        ),
+        rangeslider=dict(visible=True),  # Enable the range slider for manual date range selection
+        type="date"
+    )
+)
 
 # Display the plot for money markets
 col1.plotly_chart(line_fig_money_market)
-
 # Top-left: Money Market Dashboard
 # money_market_dashboard = money_markets
 col1.subheader("Money Market Dashboard")
