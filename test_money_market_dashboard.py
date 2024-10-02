@@ -281,7 +281,8 @@ col3, col4 = st.columns([1, 1])
 
 t_yields = money_markets[['Fed Funds Rate', '3 month T-yield','2 year T-yield',
                          '5 year T-yield','10 year T-yield', '30 year T-yield', 
-                         '10y-2y Spread','AAA-BBB Corp Yield','CCC Corp Yield',
+                         '10y-2y Spread','AAA-CCC Corp Yield',
+                          '10yr-CCC Corp Yield', 'CCC Corp Yield',
                          '5yr Implied Inflation']]
 df = pd.DataFrame()
 
