@@ -369,6 +369,7 @@ line_fig_fixed_income.update_layout(
     title=f"{selected_column_fixed_income}",
     xaxis_title="Date", 
     yaxis_title=selected_column_fixed_income,
+    yaxis=dict(autorange=True),
     
     # Disable the legend
     showlegend=False,
@@ -417,6 +418,7 @@ line_fig_money_market.update_layout(
     title=f"{selected_column_money_market}",
     xaxis_title="Date", 
     yaxis_title=selected_column_money_market,
+    yaxis=dict(autorange=True),
     showlegend=False,  # Corrected from `showlegend = false`
     
     # Add range selector and slider for x-axis
