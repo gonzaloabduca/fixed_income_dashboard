@@ -264,6 +264,7 @@ fixed_income_dict = {
     'JNK': 'Junk Bonds ETF',
     'HYG': 'High Yield Corporate Bond ETF',
     'SHY': '1-3 Year Treasury Bond ETF',
+    '^MOVE' : 'Bonds Volatility Index'
     }
 
 money_markets = get_indicators(bonds, start=start, end=end).resample('W').last().ffill()
@@ -324,6 +325,8 @@ df = df.style.format({
 money_market_dashboard = df
 
 fixed_income_data = yf.download(tickers=list(fixed_income_dict.keys()), start=start, end=end)['Adj Close']
+
+fixed_income_data['LQD/JNK'] = fixed_income_data['LQD'] / fixed_income_data['JNK']
 
 
 # Bottom-left: Fixed Income Dashboard
