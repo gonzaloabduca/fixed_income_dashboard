@@ -340,38 +340,55 @@ col2.subheader("Interactive Fixed Income Line Chart")
 # Dropdown to select a column for fixed income data
 selected_column_fixed_income = col2.selectbox("Select a fixed income column to plot", fixed_income_data.columns)
 
-# Dropdown menu for time range selection for fixed income
-time_range_fixed_income = col2.selectbox("Select a time range for fixed income", ('1Y', '5Y', '20Y', 'MAX'), index=1)  # Default is 5Y
-
-# Filter the data based on the selected time range for fixed income
-if time_range_fixed_income == '1Y':
-    sliced_data_fixed_income = fixed_income_data.iloc[-252:]  # Last 52 weeks for 1 year
-elif time_range_fixed_income == '5Y':
-    sliced_data_fixed_income = fixed_income_data.iloc[-1260:]  # Last 260 weeks for 5 years
-elif time_range_fixed_income == '20Y':
-    sliced_data_fixed_income = fixed_income_data.iloc[-5040:]  # Last 1040 weeks for 20 years
-else:  # 'MAX'
-    sliced_data_fixed_income = fixed_income_data  # No slicing, show all data
-
 # Calculate the 1-year moving average for the selected column for fixed income
-moving_average_fixed_income = sliced_data_fixed_income[selected_column_fixed_income].rolling(window=252).mean()
+moving_average_fixed_income = fixed_income_data[selected_column_fixed_income].rolling(window=252).mean()
 
 # Create the Plotly figure for fixed income
 line_fig_fixed_income = go.Figure()
 
 # Add the selected fixed income column's line chart
-line_fig_fixed_income.add_trace(go.Scatter(x=sliced_data_fixed_income.index, y=sliced_data_fixed_income[selected_column_fixed_income], mode='lines', name=selected_column_fixed_income))
+line_fig_fixed_income.add_trace(go.Scatter(
+    x=fixed_income_data.index, 
+    y=fixed_income_data[selected_column_fixed_income], 
+    mode='lines', 
+    name=selected_column_fixed_income
+))
 
 # Add the 1-year moving average line chart for fixed income
-line_fig_fixed_income.add_trace(go.Scatter(x=sliced_data_fixed_income.index, y=moving_average_fixed_income, mode='lines', name=f"{selected_column_fixed_income} 1-year MA"))
+line_fig_fixed_income.add_trace(go.Scatter(
+    x=fixed_income_data.index, 
+    y=moving_average_fixed_income, 
+    mode='lines', 
+    name=f"{selected_column_fixed_income} 1-year MA"
+))
 
 # Update the layout of the chart for fixed income
-line_fig_fixed_income.update_layout(template="plotly_dark", title=f"{selected_column_fixed_income}", xaxis_title="Date", yaxis_title=selected_column_fixed_income)
+line_fig_fixed_income.update_layout(
+    template="plotly_dark", 
+    title=f"{selected_column_fixed_income}",
+    xaxis_title="Date", 
+    yaxis_title=selected_column_fixed_income,
+    
+    # Disable the legend
+    showlegend=False,
+    
+    # Add range selector and slider for x-axis
+    xaxis=dict(
+        rangeselector=dict(
+            buttons=list([
+                dict(count=1, label="1Y", step="year", stepmode="backward"),
+                dict(count=5, label="5Y", step="year", stepmode="backward"),
+                dict(count=20, label="20Y", step="year", stepmode="backward"),
+                dict(step="all", label="MAX")
+            ])
+        ),
+        rangeslider=dict(visible=True),  # Enable the range slider for manual date range selection
+        type="date"  # Specify that the x-axis is a date axis
+    )
+)
 
 # Display the plot for fixed income
 col2.plotly_chart(line_fig_fixed_income)
-
-
 #########################################
 # Top-left: Interactive Line Chart with Dropdown Menu
 col1.subheader("Interactive Money Market Line Chart")
@@ -399,11 +416,9 @@ line_fig_money_market.update_layout(
     title=f"{selected_column_money_market}",
     xaxis_title="Date", 
     yaxis_title=selected_column_money_market,
-    showlegend = false
-)
+    showlegend=False,  # Corrected from `showlegend = false`
     
-    
-    # Add range selector and slider
+    # Add range selector and slider for x-axis
     xaxis=dict(
         rangeselector=dict(
             buttons=list([
@@ -421,6 +436,7 @@ line_fig_money_market.update_layout(
 
 # Display the plot for money markets
 col1.plotly_chart(line_fig_money_market)
+
 # Top-left: Money Market Dashboard
 # money_market_dashboard = money_markets
 col1.subheader("Money Market Dashboard")
