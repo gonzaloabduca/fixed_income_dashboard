@@ -335,7 +335,7 @@ col2.subheader("Inflation Dashboard")
 col2.table(inflation_dashboard)
 
 #########################################
-# Top-right: Interactive Line Chart with Dropdown Menu
+# Top-right: Interactive Line Chart with Dropdown Menu for Fixed Income
 col2.subheader("Interactive Fixed Income Line Chart")
 
 # Dropdown to select a column for fixed income data
@@ -363,13 +363,13 @@ line_fig_fixed_income.add_trace(go.Scatter(
     name=f"{selected_column_fixed_income} 1-year MA"
 ))
 
-# Update the layout of the chart for fixed income
+# Update the layout of the chart for fixed income with dynamic slicing
 line_fig_fixed_income.update_layout(
     template="plotly_dark", 
     title=f"{selected_column_fixed_income}",
     xaxis_title="Date", 
     yaxis_title=selected_column_fixed_income,
-    yaxis=dict(autorange=True),
+    yaxis=dict(autorange=True),  # Enable automatic y-axis scaling
     
     # Disable the legend
     showlegend=False,
@@ -391,8 +391,9 @@ line_fig_fixed_income.update_layout(
 
 # Display the plot for fixed income
 col2.plotly_chart(line_fig_fixed_income)
-#########################################
-# Top-left: Interactive Line Chart with Dropdown Menu
+
+
+# Top-left: Interactive Line Chart with Dropdown Menu for Money Markets
 col1.subheader("Interactive Money Market Line Chart")
 
 # Dropdown to select a column for money markets
@@ -405,21 +406,29 @@ moving_average_money_market = money_markets[selected_column_money_market].rollin
 line_fig_money_market = go.Figure()
 
 # Add the selected money market column's line chart
-line_fig_money_market.add_trace(go.Scatter(x=money_markets.index, y=money_markets[selected_column_money_market], 
-                                           mode='lines', name=selected_column_money_market))
+line_fig_money_market.add_trace(go.Scatter(
+    x=money_markets.index, 
+    y=money_markets[selected_column_money_market], 
+    mode='lines', 
+    name=selected_column_money_market
+))
 
 # Add the 1-year moving average line chart for money markets
-line_fig_money_market.add_trace(go.Scatter(x=money_markets.index, y=moving_average_money_market, 
-                                           mode='lines', name=f"{selected_column_money_market} 1-year MA"))
+line_fig_money_market.add_trace(go.Scatter(
+    x=money_markets.index, 
+    y=moving_average_money_market, 
+    mode='lines', 
+    name=f"{selected_column_money_market} 1-year MA"
+))
 
-# Update the layout of the chart for money markets
+# Update the layout of the chart for money markets with dynamic slicing
 line_fig_money_market.update_layout(
     template="plotly_dark", 
     title=f"{selected_column_money_market}",
     xaxis_title="Date", 
     yaxis_title=selected_column_money_market,
-    yaxis=dict(autorange=True),
-    showlegend=False,  # Corrected from `showlegend = false`
+    yaxis=dict(autorange=True),  # Enable automatic y-axis scaling
+    showlegend=False,
     
     # Add range selector and slider for x-axis
     xaxis=dict(
@@ -439,16 +448,3 @@ line_fig_money_market.update_layout(
 
 # Display the plot for money markets
 col1.plotly_chart(line_fig_money_market)
-
-# Top-left: Money Market Dashboard
-# money_market_dashboard = money_markets
-col1.subheader("Money Market Dashboard")
-col1.table(money_market_dashboard)
-# Bottom-right: Yield Curve Plot
-yield_curve = money_markets[['Fed Funds Rate', '1 month T-yield', '3 month T-yield', '6 month T-yield', '1 year T-yield', '2 year T-yield', '3 year T-yield', '5 year T-yield', '7 year T-yield', '10 year T-yield', '20 year T-yield', '30 year T-yield']]
-most_recent_curve = yield_curve.iloc[-1]
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=yield_curve.columns, y=most_recent_curve.values, mode='lines+markers', name="Most Recent Curve"))
-fig.update_layout(template="plotly_dark", title="Most Recent Yield Curve", xaxis_title="Maturity", yaxis_title="Yield (%)")
-col1.subheader("Yield Curve")
-col1.plotly_chart(fig)
